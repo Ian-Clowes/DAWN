@@ -28,22 +28,30 @@ text output.
 For example consider a simple network of two AP with 2 stations.  The following (simplifed) script is
 used to configure what one AP will be aware of:
 
+    CONFIG RSSI=10db
     SELF 01:01:01:01:01:01
     AP 02:02:02:02:02:02
     CONNECT 99:99:99:99:99:99 01:01:01:01:01:01 -78dB
     HEARING 99:99:99:99:99:99 02:02:02:02:02:02 -65dB
     CONNECT 88:88:88:88:88:88 01:01:01:01:01:01 -65dB
     HEARING 88:88:88:88:88:88 02:02:02:02:02:02 -65dB
+    KICK CONSUME
+    KICK
 
 This means our test AP has the BSSID 01:..., and there is another AP in the network with BSSID 02:.... 
 Two stations with MAC 99:... and 88:... are in the network, both connected to AP01:... but also
 able to see AP02:....  The dB values indicate RSSI levels, and will be evalutated to determine if stations
-are connected to an appropriate AP.  We'll also configure
+are connected to an appropriate AP.  We'ed also configured
 AP01:... to have an RSSI transition threshold of 10dB.  When "kicking evaluation" is performed
 STA99:... can improve its RSSI by over 10dB by switching to AP02:..., so will be instructed to do so,
-resulting in the output:
+resulting in the test actions:
 
-    KICK 99:99:99:99:99:99 01:01:01:01:01:01 02:02:02:02:02:02
+    REMOVE  99:99:99:99:99:99 01:01:01:01:01:01
+    CONNECT 99:99:99:99:99:99 02:02:02:02:02:02 -65dB
+
+Note that this is also valid input to the test_harness, and the parameter CONSUME
+on the KICK action will cause it to be reinjested for consideration when the
+second KICK action is evaluated.
 	
 ## Types of Testing
 Three main areas of testing are performed by the supplied test scripts:
