@@ -10,21 +10,21 @@
 #include "datastorage.h"
 #include "uface.h"
 
-/*** External functions ***/
+/*** SUT functions we use that are not in header files (like "friend" functions) ***/
 void ap_array_insert(ap entry);
 ap ap_array_delete(ap entry);
 
 /*** Testing structures, etc ***/
-union __attribute__((__packed__)) mac_mangler
+union __attribute__((__packed__)) pac_a_mac
 {
     struct {
-        uint8_t b[6];
+        uint8_t pos[6]; 
         uint8_t packing[2];
     } u8;
     uint64_t u64;
 };
 
-/*** Test Stub Fubctions - Called by SUT ***/
+/*** Test Stub Functions - Called by SUT ***/
 void ubus_send_beacon_report(uint8_t client[], int id)
 {
     printf("send_beacon_report() was called...\n");
@@ -76,163 +76,90 @@ int get_bandwidth_iwinfo(uint8_t* client_addr, float* rx_rate, float* tx_rate)
 }
 
 /*** Local Function Prototypes ***/
-int ap_array_helper_auto(int action, int i0, int i1);
-int client_array_helper_auto(int action, int i0, int i1);
-int auth_entry_array_helper_auto(int action, int i0, int i1);
-int probe_array_helper_auto(int action, int i0, int i1);
+#define HELPER_ACTION_ADD 0x0000
+#define HELPER_ACTION_DEL 0x1000
+#define HELPER_ACTION_MASK 0x1000
 
-/*** Test code */
-int ap_array_helper_auto(int action, int i0, int i1)
+#define HELPER_AP 0x0001
+#define HELPER_CLIENT 0x0002
+#define HELPER_AUTH_ENTRY 0x0004
+#define HELPER_PROBE_ARRAY 0x0008
+
+int array_auto_helper(int action, int i0, int i1);
+int client_array_auto_helper(int action, int i0, int i1);
+int auth_entry_array_auto_helper(int action, int i0, int i1);
+int probe_array_auto_helper(int action, int i0, int i1);
+
+/*** Test narness code */
+int array_auto_helper(int action, int i0, int i1)
 {
-    int m;
+    int m = i0;
     int step = (i0 > i1) ? -1 : 1;
     int ret = 0;
 
-    switch (action)
-    {
-    case 0:
-    case 1:
-        m = i0;
-        int cont = 1;
-        while (cont) {
-            union mac_mangler this_mac;
-            ap ap0;
+    int cont = 1;
+    while (cont) {
+        union pac_a_mac this_mac;
 
-            this_mac.u64 = m;
-            memcpy(ap0.bssid_addr, this_mac.u8.b, sizeof(ap0.bssid_addr));
-            if (action == 0)
+        this_mac.u64 = m;
+        switch (action & ~HELPER_ACTION_MASK)
+        {
+        case HELPER_AP:
+            ; // Empty statement to allow label before declaration
+            ap ap0;
+            memcpy(ap0.bssid_addr, &this_mac.u8.pos[0], sizeof(ap0.bssid_addr));
+
+            if ((action & HELPER_ACTION_MASK) == HELPER_ACTION_ADD)
                 ap_array_insert(ap0);
             else
                 ap_array_delete(ap0);
-
-            if (m == i1)
-                cont = 0;
-            else
-                m += step;
-        }
-        break;
-    default:
-        ret = -1;
-        break;
-    }
-
-    return ret;
-}
-
-int client_array_helper_auto(int action, int i0, int i1)
-{
-    int m;
-    int step = (i0 > i1) ? -1 : 1;
-    int ret = 0;
-
-    switch (action)
-    {
-    case 0:
-    case 1:
-        m = i0;
-        int cont = 1;
-        while (cont) {
-            union mac_mangler this_mac;
+            break;
+        case HELPER_CLIENT:
+            ; // Empty statement to allow label before declaration
             client client0;
+            memcpy(client0.bssid_addr, &this_mac.u8.pos[0], sizeof(client0.bssid_addr));
+            memcpy(client0.client_addr, &this_mac.u8.pos[0], sizeof(client0.client_addr));
 
-            this_mac.u64 = m;
-            memcpy(client0.bssid_addr, this_mac.u8.b, sizeof(client0.bssid_addr));
-            memcpy(client0.client_addr, this_mac.u8.b, sizeof(client0.client_addr));
-            if (action == 0)
+            if ((action & HELPER_ACTION_MASK) == HELPER_ACTION_ADD)
                 client_array_insert(client0);
             else
                 client_array_delete(client0);
-
-            if (m == i1)
-                cont = 0;
-            else
-                m += step;
-        }
-        break;
-    default:
-        ret = -1;
-        break;
-    }
-
-    return ret;
-}
-
-int auth_entry_array_helper_auto(int action, int i0, int i1)
-{
-    int m;
-    int step = (i0 > i1) ? -1 : 1;
-    int ret = 0;
-
-    switch (action)
-    {
-    case 0:
-    case 1:
-        m = i0;
-        int cont = 1;
-        while (cont) {
-            union mac_mangler this_mac;
-            auth_entry auth_entry0;
-
-            this_mac.u64 = m;
-            memcpy(auth_entry0.bssid_addr, this_mac.u8.b, sizeof(auth_entry0.bssid_addr));
-            memcpy(auth_entry0.client_addr, this_mac.u8.b, sizeof(auth_entry0.client_addr));
-            if (action == 0)
-                denied_req_array_insert(auth_entry0);
-            else
-                denied_req_array_delete(auth_entry0);
-
-            if (m == i1)
-                cont = 0;
-            else
-                m += step;
-        }
-        break;
-    default:
-        ret = -1;
-        break;
-    }
-
-    return ret;
-}
-
-int probe_array_helper_auto(int action, int i0, int i1)
-{
-    int m;
-    int step = (i0 > i1) ? -1 : 1;
-    int ret = 0;
-
-    switch (action)
-    {
-    case 0:
-    case 1:
-        m = i0;
-        int cont = 1;
-        while (cont) {
-            union mac_mangler this_mac;
+            break;
+        case HELPER_PROBE_ARRAY:
+            ; // Empty statement to allow label before declaration
             probe_entry probe0;
+            memcpy(probe0.bssid_addr, &this_mac.u8.pos[0], sizeof(probe0.bssid_addr));
+            memcpy(probe0.client_addr, &this_mac.u8.pos[0], sizeof(probe0.client_addr));
 
-            this_mac.u64 = m;
-            memcpy(probe0.bssid_addr, this_mac.u8.b, sizeof(probe0.bssid_addr));
-            memcpy(probe0.client_addr, this_mac.u8.b, sizeof(probe0.client_addr));
-            if (action == 0)
+            if ((action & HELPER_ACTION_MASK) == HELPER_ACTION_ADD)
                 probe_array_insert(probe0);
             else
                 probe_array_delete(probe0);
+            break;
+        case HELPER_AUTH_ENTRY:
+            ; // Empty statement to allow label before declaration
+            auth_entry auth_entry0;
+            memcpy(auth_entry0.bssid_addr, &this_mac.u8.pos[0], sizeof(auth_entry0.bssid_addr));
+            memcpy(auth_entry0.client_addr, &this_mac.u8.pos[0], sizeof(auth_entry0.client_addr));
 
-            if (m == i1)
-                cont = 0;
+            if ((action & HELPER_ACTION_MASK) == HELPER_ACTION_ADD)
+                denied_req_array_insert(auth_entry0);
             else
-                m += step;
+                denied_req_array_delete(auth_entry0);
+            break;
+        default:
+            printf("HELPER error - which entity?\n");
+            ret = -1;
         }
-        break;
-    default:
-        ret = -1;
-        break;
+
+        if (m == i1)
+            cont = 0;
+        else
+            m += step;
     }
 
     return ret;
 }
-
 
 int consume_actions(int argc, char* argv[]);
 
@@ -286,7 +213,7 @@ int consume_actions(int argc, char* argv[])
             args_required = 3;
             if (curr_arg + args_required <= argc)
             {
-                ret = ap_array_helper_auto(0, atoi(*(argv + 1)), atoi(*(argv + 2)));
+                ret = array_auto_helper(HELPER_AP | HELPER_ACTION_ADD, atoi(*(argv + 1)), atoi(*(argv + 2)));
             }
         }
         else if (strcmp(*argv, "ap_del_auto") == 0)
@@ -294,7 +221,7 @@ int consume_actions(int argc, char* argv[])
             args_required = 3;
             if (curr_arg + args_required <= argc)
             {
-                ret = ap_array_helper_auto(1, atoi(*(argv + 1)), atoi(*(argv + 2)));
+                ret = array_auto_helper(HELPER_AP | HELPER_ACTION_DEL, atoi(*(argv + 1)), atoi(*(argv + 2)));
             }
         }
         else if (strcmp(*argv, "probe_add_auto") == 0)
@@ -302,7 +229,7 @@ int consume_actions(int argc, char* argv[])
             args_required = 3;
             if (curr_arg + args_required <= argc)
             {
-                ret = probe_array_helper_auto(0, atoi(*(argv + 1)), atoi(*(argv + 2)));
+                ret = array_auto_helper(HELPER_PROBE_ARRAY | HELPER_ACTION_ADD, atoi(*(argv + 1)), atoi(*(argv + 2)));
             }
         }
         else if (strcmp(*argv, "probe_del_auto") == 0)
@@ -310,7 +237,7 @@ int consume_actions(int argc, char* argv[])
             args_required = 3;
             if (curr_arg + args_required <= argc)
             {
-                ret = probe_array_helper_auto(1, atoi(*(argv + 1)), atoi(*(argv + 2)));
+                ret = array_auto_helper(HELPER_PROBE_ARRAY | HELPER_ACTION_DEL, atoi(*(argv + 1)), atoi(*(argv + 2)));
             }
         }
         else if (strcmp(*argv, "client_add_auto") == 0)
@@ -318,7 +245,7 @@ int consume_actions(int argc, char* argv[])
             args_required = 3;
             if (curr_arg + args_required <= argc)
             {
-                ret = client_array_helper_auto(0, atoi(*(argv + 1)), atoi(*(argv + 2)));
+                ret = array_auto_helper(HELPER_CLIENT | HELPER_ACTION_ADD, atoi(*(argv + 1)), atoi(*(argv + 2)));
             }
         }
         else if (strcmp(*argv, "client_del_auto") == 0)
@@ -326,7 +253,7 @@ int consume_actions(int argc, char* argv[])
             args_required = 3;
             if (curr_arg + args_required <= argc)
             {
-                ret = client_array_helper_auto(1, atoi(*(argv + 1)), atoi(*(argv + 2)));
+                ret = array_auto_helper(HELPER_CLIENT | HELPER_ACTION_DEL, atoi(*(argv + 1)), atoi(*(argv + 2)));
             }
         }
         else if (strcmp(*argv, "auth_entry_add_auto") == 0)
@@ -334,7 +261,7 @@ int consume_actions(int argc, char* argv[])
             args_required = 3;
             if (curr_arg + args_required <= argc)
             {
-                ret = auth_entry_array_helper_auto(0, atoi(*(argv + 1)), atoi(*(argv + 2)));
+                ret = array_auto_helper(HELPER_AUTH_ENTRY | HELPER_ACTION_ADD, atoi(*(argv + 1)), atoi(*(argv + 2)));
             }
         }
         else if (strcmp(*argv, "auth_entry_del_auto") == 0)
@@ -342,7 +269,7 @@ int consume_actions(int argc, char* argv[])
             args_required = 3;
             if (curr_arg + args_required <= argc)
             {
-                ret = auth_entry_array_helper_auto(1, atoi(*(argv + 1)), atoi(*(argv + 2)));
+                ret = array_auto_helper(HELPER_AUTH_ENTRY | HELPER_ACTION_DEL, atoi(*(argv + 1)), atoi(*(argv + 2)));
             }
         }
         else
@@ -506,7 +433,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            // Assume direct input on command line
+            // Take direct input on command line
             ret = consume_actions(argc, argv);
         }
     }

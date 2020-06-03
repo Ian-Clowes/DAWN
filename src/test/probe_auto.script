@@ -1,0 +1,5 @@
+# Basic test ofarray entry handling
+probe_add_auto 10 20
+probe_show
+probe_del_auto 10 20
+probe_show
