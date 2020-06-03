@@ -368,8 +368,10 @@ int main(int argc, char* argv[])
     {
         printf("Usage: %s [commands]\n\n", *argv);
         printf("  [action [arg...]]... : Read test actions from command line\n");
-        printf("    --script [file]... : Read test script from file(s) (NB: \"-\" is a valid name indicating STDIN) {-s}\n");
-        printf("                     - : Read test script from STDIN (and remaining arguments as script file names)\n");
+        printf("    --script [file]... : Read test script from file(s) (NB: \"-\" is a valid name\n");
+        printf("                         indicating STDIN) {-s}\n");
+        printf("                     - : Read test script from STDIN (and remaining arguments\n");
+        printf("                         as script file names)\n");
         printf("                --help : This help message {-h, help}\n");
         printf("NB: Contents of {braces} indicate equivalent command\n");
     }
