@@ -48,6 +48,10 @@ void write_mac_to_file(char *path, uint8_t addr[]);
  */
 int string_is_greater(uint8_t *str, uint8_t *str_2);
 
+int mac_is_equal(uint8_t addr1[], uint8_t addr2[]);
+
+int mac_is_greater(uint8_t addr1[], uint8_t addr2[]);
+
 int rcpi_to_rssi(int rcpi);
 
 #endif

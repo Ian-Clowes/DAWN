@@ -373,6 +373,7 @@ int support_vht(const char *ifname) {
         return 0;
     }
 
+    // TODO: 1 << 2 duplicated here, and also appears as HT mode mask
     uint32_t vht_support_bitmask = (1 << 2) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5) | (1 << 6);
     int ret = htmodes & vht_support_bitmask ? 1 : 0;
     iwinfo_finish();

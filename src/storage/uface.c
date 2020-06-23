@@ -29,15 +29,17 @@ struct uloop_timeout denied_req_timeout = {
 };
 
 void uloop_add_data_cbs() {
-    uloop_timeout_add(&probe_timeout);
-    uloop_timeout_add(&client_timeout);
-    uloop_timeout_add(&ap_timeout);
+    uloop_timeout_add(&probe_timeout);  //  callback = remove_probe_array_cb
+    uloop_timeout_add(&client_timeout);  //  callback = remove_client_array_cb
+    uloop_timeout_add(&ap_timeout);  //  callback = remove_ap_array_cb
 
     if (dawn_metric.use_driver_recog) {
-        uloop_timeout_add(&denied_req_timeout);
+        uloop_timeout_add(&denied_req_timeout);  //  callback = denied_req_array_cb
     }
 }
 
+// TODO: Move mutex handling to remove_??? function to make test harness simpler?
+// Or not needed as test harness not threaded?
 void remove_probe_array_cb(struct uloop_timeout *t) {
     pthread_mutex_lock(&probe_array_mutex);
     printf("[Thread] : Removing old probe entries!\n");
@@ -47,6 +49,8 @@ void remove_probe_array_cb(struct uloop_timeout *t) {
     uloop_timeout_set(&probe_timeout, timeout_config.remove_probe * 1000);
 }
 
+// TODO: Move mutex handling to remove_??? function to make test harness simpler?
+// Or not needed as test harness not threaded?
 void remove_client_array_cb(struct uloop_timeout *t) {
     pthread_mutex_lock(&client_array_mutex);
     printf("[Thread] : Removing old client entries!\n");
@@ -55,6 +59,8 @@ void remove_client_array_cb(struct uloop_timeout *t) {
     uloop_timeout_set(&client_timeout, timeout_config.update_client * 1000);
 }
 
+// TODO: Move mutex handling to remove_??? function to make test harness simpler?
+// Or not needed as test harness not threaded?
 void remove_ap_array_cb(struct uloop_timeout *t) {
     pthread_mutex_lock(&ap_array_mutex);
     printf("[ULOOP] : Removing old ap entries!\n");
@@ -63,6 +69,8 @@ void remove_ap_array_cb(struct uloop_timeout *t) {
     uloop_timeout_set(&ap_timeout, timeout_config.remove_ap * 1000);
 }
 
+// TODO: Move mutex handling to (new) remove_??? function to make test harness simpler?
+// Or not needed as test harness not threaded?
 void denied_req_array_cb(struct uloop_timeout *t) {
     pthread_mutex_lock(&denied_array_mutex);
     printf("[ULOOP] : Processing denied authentication!\n");

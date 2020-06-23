@@ -48,6 +48,7 @@ SET(SOURCES
 
 SET(SOURCES_TEST_STORAGE
         test/test_storage.c
+        include/test_storage.h
 
         include/uface.h
 

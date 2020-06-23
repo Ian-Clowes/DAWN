@@ -22,6 +22,23 @@ int string_is_greater(uint8_t *str, uint8_t *str_2) {
     return length_1 > length_2;
 }
 
+int mac_is_equal(uint8_t addr1[], uint8_t addr2[]) {
+    return memcmp(addr1, addr2, ETH_ALEN * sizeof(uint8_t)) == 0;
+}
+
+int mac_is_greater(uint8_t addr1[], uint8_t addr2[]) {
+    for (int i = 0; i < ETH_ALEN; i++) {
+        if (addr1[i] > addr2[i]) {
+            return 1;
+        }
+        if (addr1[i] < addr2[i]) {
+            return 0;
+        }
+
+        // if equal continue...
+    }
+    return 0;
+}
 // source: https://elixir.bootlin.com/linux/v4.9/source/lib/hexdump.c#L28
 int hex_to_bin(char ch) {
     if ((ch >= '0') && (ch <= '9')) return ch - '0';

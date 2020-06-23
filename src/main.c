@@ -15,8 +15,6 @@ void daemon_shutdown();
 
 void signal_handler(int sig);
 
-int init_mutex();
-
 struct sigaction signal_action;
 
 void daemon_shutdown() {
@@ -25,11 +23,7 @@ void daemon_shutdown() {
     uci_clear();
     uloop_cancelled = true;
 
-    // free resources
-    fprintf(stdout, "Freeing mutex resources\n");
-    pthread_mutex_destroy(&probe_array_mutex);
-    pthread_mutex_destroy(&client_array_mutex);
-    pthread_mutex_destroy(&ap_array_mutex);
+    destroy_mutex();
 }
 
 void signal_handler(int sig) {
@@ -49,30 +43,6 @@ void signal_handler(int sig) {
     }
 }
 
-int init_mutex() {
-
-    if (pthread_mutex_init(&probe_array_mutex, NULL) != 0) {
-        fprintf(stderr, "Mutex init failed!\n");
-        return 1;
-    }
-
-    if (pthread_mutex_init(&client_array_mutex, NULL) != 0) {
-        fprintf(stderr, "Mutex init failed!\n");
-        return 1;
-    }
-
-    if (pthread_mutex_init(&ap_array_mutex, NULL) != 0) {
-        fprintf(stderr, "Mutex init failed!\n");
-        return 1;
-    }
-
-    if (pthread_mutex_init(&denied_array_mutex, NULL) != 0) {
-        fprintf(stderr, "Mutex init failed!\n");
-        return 1;
-    }
-    return 0;
-}
-
 int main(int argc, char **argv) {
 
     const char *ubus_socket = NULL;
@@ -89,6 +59,7 @@ int main(int argc, char **argv) {
     sigaction(SIGINT, &signal_action, NULL);
 
     uci_init();
+    // TODO: Why the extra loacl struct to retuen into?
     struct network_config_s net_config = uci_get_dawn_network();
     network_config = net_config;
 
@@ -96,6 +67,7 @@ int main(int argc, char **argv) {
     gcrypt_init();
     gcrypt_set_key_and_iv(net_config.shared_key, net_config.iv);
 
+    // TODO: Why the extra loacl struct to retuen into?
     struct time_config_s time_config = uci_get_time_config();
     timeout_config = time_config; // TODO: Refactor...
 

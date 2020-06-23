@@ -28,9 +28,6 @@ int insert_to_maclist(uint8_t mac[]);
 
 int mac_in_maclist(uint8_t mac[]);
 
-int mac_is_equal(uint8_t addr1[], uint8_t addr2[]);
-
-int mac_is_greater(uint8_t addr1[], uint8_t addr2[]);
 
 /* Metric */
 
@@ -99,9 +96,15 @@ struct network_config_s {
 // ---------------- Global variables ----------------
 struct network_config_s network_config;
 struct time_config_s timeout_config;
-
 struct probe_metric_s dawn_metric;
-extern int probe_entry_last;
+
+// Define this to remove printing / reporing of fields, and hence observe
+// which fields are evaluated in use.
+// #define DAWN_NO_OUTPUT
+
+// TODO notes:
+//    Never used? = No code reference
+//    Never evaluated? = Set and passed in ubus, etc but never evaluated for outcomes
 
 /* Probe, Auth, Assoc */
 
@@ -109,16 +112,18 @@ extern int probe_entry_last;
 typedef struct probe_entry_s {
     uint8_t bssid_addr[ETH_ALEN];
     uint8_t client_addr[ETH_ALEN];
-    uint8_t target_addr[ETH_ALEN];
+    uint8_t target_addr[ETH_ALEN]; // TODO: Never evaluated?
     uint32_t signal;
     uint32_t freq;
     uint8_t ht_capabilities;
     uint8_t vht_capabilities;
     time_t time;
     int counter;
-    int deny_counter;
-    uint8_t max_supp_datarate;
-    uint8_t min_supp_datarate;
+#ifndef DAWN_NO_OUTPUT
+    int deny_counter; // TODO: Never used?
+    uint8_t max_supp_datarate; // TODO: Never used?
+    uint8_t min_supp_datarate; // TODO: Never used?
+#endif
     uint32_t rcpi;
     uint32_t rsni;
 } probe_entry;
@@ -126,9 +131,9 @@ typedef struct probe_entry_s {
 typedef struct auth_entry_s {
     uint8_t bssid_addr[ETH_ALEN];
     uint8_t client_addr[ETH_ALEN];
-    uint8_t target_addr[ETH_ALEN];
-    uint32_t signal;
-    uint32_t freq;
+    uint8_t target_addr[ETH_ALEN]; // TODO: Never evaluated?
+    uint32_t signal; // TODO: Never evaluated?
+    uint32_t freq; // TODO: Never evaluated?
     time_t time;
     int counter;
 } auth_entry;
@@ -157,7 +162,7 @@ extern int probe_entry_last;
 pthread_mutex_t probe_array_mutex;
 
 // ---------------- Functions ----------------
-probe_entry insert_to_array(probe_entry entry, int inc_counter, int save_80211k, int is_beacon);
+probe_entry insert_to_array(probe_entry entry, int inc_counter, int save_80211k, int is_beacon, time_t timestamp);
 
 void probe_array_insert(probe_entry entry);
 
@@ -177,7 +182,7 @@ void denied_req_array_insert(auth_entry entry);
 
 auth_entry denied_req_array_delete(auth_entry entry);
 
-auth_entry insert_to_denied_req_array(auth_entry entry, int inc_counter);
+auth_entry insert_to_denied_req_array(auth_entry entry, int inc_counter, time_t timestamp);
 
 void print_auth_entry(auth_entry entry);
 
@@ -189,28 +194,28 @@ void print_auth_entry(auth_entry entry);
 typedef struct client_s {
     uint8_t bssid_addr[ETH_ALEN];
     uint8_t client_addr[ETH_ALEN];
-    char signature[SIGNATURE_LEN];
-    uint8_t ht_supported;
-    uint8_t vht_supported;
-    uint32_t freq;
-    uint8_t auth;
-    uint8_t assoc;
-    uint8_t authorized;
-    uint8_t preauth;
-    uint8_t wds;
-    uint8_t wmm;
-    uint8_t ht;
-    uint8_t vht;
-    uint8_t wps;
-    uint8_t mfp;
+    char signature[SIGNATURE_LEN]; // TODO: Never evaluated?
+    uint8_t ht_supported; // TODO: Never evaluated?
+    uint8_t vht_supported; // TODO: Never evaluated?
+    uint32_t freq; // TODO: Never evaluated?
+    uint8_t auth; // TODO: Never evaluated?
+    uint8_t assoc; // TODO: Never evaluated?
+    uint8_t authorized; // TODO: Never evaluated?
+    uint8_t preauth; // TODO: Never evaluated?
+    uint8_t wds; // TODO: Never evaluated?
+    uint8_t wmm;  // TODO: Never evaluated?
+    uint8_t ht; // TODO: Never evaluated?
+    uint8_t vht; // TODO: Never evaluated?
+    uint8_t wps; // TODO: Never evaluated?
+    uint8_t mfp; // TODO: Never evaluated?
     time_t time;
-    uint32_t aid;
+    uint32_t aid; // TODO: Never evaluated?
     uint32_t kick_count;
 } client;
 
 typedef struct ap_s {
     uint8_t bssid_addr[ETH_ALEN];
-    uint32_t freq;
+    uint32_t freq; // TODO: Never evaluated?
     uint8_t ht_support;
     uint8_t vht_support;
     uint32_t channel_utilization;
@@ -219,7 +224,7 @@ typedef struct ap_s {
     uint8_t ssid[SSID_MAX_LEN];
     char neighbor_report[NEIGHBOR_REPORT_LEN];
     uint32_t collision_domain;
-    uint32_t bandwidth;
+    uint32_t bandwidth; // TODO: Never evaluated?
     uint32_t ap_weight;
 } ap;
 
@@ -248,9 +253,11 @@ int probe_array_update_rcpi_rsni(uint8_t bssid_addr[], uint8_t client_addr[], ui
 
 void remove_old_client_entries(time_t current_time, long long int threshold);
 
-void insert_client_to_array(client entry);
+void insert_client_to_array(client entry, time_t timestamp);
 
 void kick_clients(uint8_t bssid[], uint32_t id);
+
+void update_iw_info(uint8_t bssid[]);
 
 void client_array_insert(client entry);
 
@@ -262,7 +269,7 @@ void print_client_entry(client entry);
 
 int is_connected_somehwere(uint8_t client_addr[]);
 
-ap insert_to_ap_array(ap entry);
+ap insert_to_ap_array(ap entry, time_t timestamp);
 
 void remove_old_ap_entries(time_t current_time, long long int threshold);
 
@@ -287,4 +294,7 @@ char *sort_string;
 // ---------------- Functions -------------------
 int better_ap_available(uint8_t bssid_addr[], uint8_t client_addr[], char* neighbor_report, int automatic_kick);
 
+// All users of datastorage should call init_ / destroy_mutex at initialisation and termination respectively
+int init_mutex();
+void destroy_mutex();
 #endif
